@@ -87,11 +87,18 @@ spec:
             {{- end }}
             - name: WORKLOAD_NAMESPACE
               value: {{ .Release.Namespace | quote }}
+            {{- if or (eq (include "tfy-agent.clustersConfig.hasAnyToken" .) "true") (le (len .Values.clustersConfig) 1) }}
             - name: CLUSTER_TOKEN
               valueFrom:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" .}}
+                  optional: {{ if or (eq (include "tfy-agent.workloadIdentity.mountEnabled" .) "true") (gt (len .Values.clustersConfig) 1) }}true{{ else }}false{{ end }}
+            {{- end }}
+            {{- if .Values.config.clusterFqn }}
+            - name: CLUSTER_FQN
+              value: {{ .Values.config.clusterFqn | quote }}
+            {{- end }}
             {{- if gt (len .Values.clustersConfig) 1 }}
             - name: MULTI_LOGICAL_CLUSTER_ENABLED
               value: "true"
@@ -101,6 +108,10 @@ spec:
             {{- if .Values.config.allowedNamespaces }}
             - name: NAMESPACE_ALLOW_LIST
               value: {{ .Values.config.allowedNamespaces | join "," | quote }}
+            {{- end }}
+            {{- if (eq (include "tfy-agent.workloadIdentity.mountEnabled" .) "true") }}
+            - name: WORKLOAD_IDENTITY_TOKEN_FILE
+              value: {{ printf "%s/%s" .Values.config.workloadIdentity.mountPath .Values.config.workloadIdentity.tokenFileName | quote }}
             {{- end }}
           {{- range $val := .Values.tfyAgent.extraEnvVars }}
             - name: {{ $val.name }}
@@ -129,13 +140,20 @@ spec:
             {{- if .Values.global.customCA.enabled }}
             {{- include "tfy-agent.customCA.volumeMounts" . | nindent 12 }}
             {{- end }}
+            {{- if (eq (include "tfy-agent.workloadIdentity.mountEnabled" .) "true") }}
+            - name: workload-identity-token
+              mountPath: {{ .Values.config.workloadIdentity.mountPath | quote }}
+              readOnly: true
+            {{- end }}
             {{- if gt (len .Values.clustersConfig) 1 }}
             - name: clusters-config
               mountPath: /etc/tfy-agent/logical-clusters
               readOnly: true
+            {{- if eq (include "tfy-agent.clustersConfig.hasAnyToken" .) "true" }}
             - name: cluster-tokens
               mountPath: /etc/tfy-agent/logical-cluster-tokens
               readOnly: true
+            {{- end }}
             {{- end }}
       {{- with .Values.tfyAgent.nodeSelector }}
       nodeSelector:
@@ -151,13 +169,24 @@ spec:
         {{- if .Values.global.customCA.enabled }}
         {{- include "tfy-agent.customCA.volumes" . | nindent 8 }}
         {{- end }}
+        {{- if (eq (include "tfy-agent.workloadIdentity.mountEnabled" .) "true") }}
+        - name: workload-identity-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: {{ .Values.config.workloadIdentity.tokenFileName | quote }}
+                  expirationSeconds: {{ .Values.config.workloadIdentity.expirationSeconds }}
+                  audience: {{ .Values.config.workloadIdentity.audience | quote }}
+        {{- end }}
         {{- if gt (len .Values.clustersConfig) 1 }}
         - name: clusters-config
           configMap:
             name: {{ include "tfy-agent.fullname" . }}-clusters-config
+        {{- if eq (include "tfy-agent.clustersConfig.hasAnyToken" .) "true" }}
         - name: cluster-tokens
           secret:
             secretName: {{ include "tfy-agent.secretName" . }}
+        {{- end }}
         {{- end }}
       {{- with .Values.tfyAgent.affinity }}
       affinity:

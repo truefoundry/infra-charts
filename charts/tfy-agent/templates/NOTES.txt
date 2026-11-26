@@ -26,3 +26,14 @@ export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.
 export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
 echo "Visit http://127.0.0.1:8080 to use your application"
 kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+{{- if and .Values.tfyAgent.enabled (index .Values "external-secrets-operator" "clusterSecretStore" "create") (not .Values.networkPolicy.enabled) }}
+
+WARNING: ClusterSecretStore webhooks call tfy-agent's secret proxy without a caller credential.
+Enable networkPolicy.enabled so only External Secrets Operator pods (networkPolicy.externalSecrets.ingressFrom) can reach that endpoint.
+{{- end }}
+{{- if and (eq (include "tfy-agent.workloadIdentity.mountEnabled" .) "true") .Values.tfyAgentProxy.enabled }}
+
+NOTE: Workload Identity mounts a projected JWT on tfy-agent-proxy using the proxy ServiceAccount
+({{ include "tfy-agent-proxy.serviceAccountName" . }}). Set cluster WIF claims to that SA (or use a cluster token)
+so remotedialer auth succeeds; do not share the agent SA with the proxy ClusterRole.
+{{- end }}

@@ -91,13 +91,17 @@ global:
 ## Parameters to configure tfyAgent and tfyAgentProxy
 ##
 config:
-  ## @param config.clusterToken Token to connect to the control plane
+  ## @param config.clusterToken Token to connect to the control plane. Optional when config.workloadIdentity.enabled and config.clusterFqn are set.
   ##
   clusterToken: ""
 
   ## @param config.clusterTokenSecret Secret of token to connect to control plane, secret key must be `CLUSTER_TOKEN`. This overrides config.clusterToken
   ##
   clusterTokenSecret: ""
+
+  ## @param config.clusterFqn Cluster FQN (tenant:name). Required when clusterToken is omitted (WIF-only); always sent as x-tfy-cluster-fqn.
+  ##
+  clusterFqn: ""
 
   ## @param config.controlPlaneURL URL of the control plane to connect agent (format: `https://`)
   ##
@@ -159,9 +163,34 @@ config:
   #   - default
   #   - namespace-1
 
+  ## Kubernetes Workload Identity Federation for control-plane auth (pod mount settings).
+  ## For multi-cluster, prefer clustersConfig[].workloadIdentity.enabled per entry.
+  ## Top-level enabled still covers single-cluster mode and mounts the projected JWT when
+  ## any clustersConfig entry enables WIF (or when this flag is true).
+  ## Enable only after the TrueFoundry cluster has identity_provider_mapping set
+  ## (WIF Group toggle on) with claims matching this chart's service account (namespace + name).
+  ## When WIF is mounted, tfy-agent, tfy-agent-proxy, and sds-server share the agent SA
+  ## so one WIF mapping covers all control-plane connections.
+  ##
+  workloadIdentity:
+    ## @param config.workloadIdentity.enabled Mount a projected SA JWT (single-cluster, or force mount). Also implied when any clustersConfig entry sets workloadIdentity.enabled.
+    enabled: false
+    ## @param config.workloadIdentity.audience JWT audience; must match the Kubernetes Identity Provider audiences in TrueFoundry
+    audience: truefoundry
+    ## @param config.workloadIdentity.expirationSeconds Projected token lifetime (kubelet rotates before expiry)
+    expirationSeconds: 3600
+    ## @param config.workloadIdentity.mountPath Directory where the token file is mounted
+    mountPath: /var/run/secrets/tfy
+    ## @param config.workloadIdentity.tokenFileName File name under mountPath
+    tokenFileName: token
+
   ## @param clustersConfig Logical clusters served by this agent. Multi-logical-cluster mode is enabled automatically when this list has more than one entry.
   ## Tokens are written to the chart-managed Secret. When config.clusterTokenSecret is set, omit token and
   ## provide tokenSecretKey matching a key in that existing Secret.
+  ## Each entry must set token/tokenSecretKey and/or workloadIdentity.enabled.
+  ## Tokenless WIF: workloadIdentity.enabled + fqn; omit token/tokenSecretKey.
+  ## Dual-mode: token/tokenSecretKey + workloadIdentity.enabled (same projected JWT for all WIF entries).
+  ## Token-only: token/tokenSecretKey without workloadIdentity.enabled.
   ## When namespaces is a concrete list, the tenant ClusterSecretStore is restricted to those namespaces
   ## via spec.conditions. namespaces: ["*"] leaves the store usable from every namespace.
   ##
@@ -175,6 +204,13 @@ clustersConfig: []
 #     tenantName: tenant-a
 #     namespaces: ["*"]
 #     # clusterSecretStoreName: custom-store
+#   - name: team-b-wif-only
+#     fqn: tenant-b:cluster-b
+#     workloadIdentity:
+#       enabled: true
+#     controlPlaneURL: https://tenant-b.example.com
+#     tenantName: tenant-b
+#     namespaces: ["*"]
 
 ## @param nameOverride String to override partial name passed in helm install command
 ##
@@ -908,8 +944,22 @@ networkPolicy:
     ##   - namespaceSelector:
     ##       matchLabels:
     ##         truefoundry.com/managed-by: servicefoundry
+  externalSecrets:
+    ## @param networkPolicy.externalSecrets.ingressFrom [array] NetworkPolicyPeer entries allowed to call tfy-agent's secret proxy (ESO webhook). Default: External Secrets Operator pods in this release namespace only (not every pod). Set to [] to block. Enable networkPolicy.enabled when using ClusterSecretStore webhooks.
+    ingressFrom:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: external-secrets
+    ## Example: allow every pod in this namespace (not recommended for the secret proxy)
+    ## ingressFrom:
+    ##   - podSelector: {}
+    ## Example: allow ESO from every namespace
+    ## ingressFrom:
+    ##   - namespaceSelector: {}
 
 ## @section eso (external-secrets operator) configuration parameters
+## ClusterSecretStore webhooks call tfy-agent (/v1/control-plane/secret); the agent
+## attaches CLUSTER_TOKEN and/or WIF and proxies to SFY. ESO does not hold CP credentials.
 ##
 external-secrets-operator:
   ## @param external-secrets-operator.enabled Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent.

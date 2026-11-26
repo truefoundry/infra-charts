@@ -360,6 +360,32 @@ Create the name of the service account to use for tfy-agent-proxy
 {{- end }}
 
 {{/*
+True when the projected SA JWT volume/env must be mounted: top-level
+config.workloadIdentity.enabled, or any clustersConfig entry with
+workloadIdentity.enabled (multi-cluster per-entry WIF).
+*/}}
+{{- define "tfy-agent.workloadIdentity.mountEnabled" -}}
+{{- $enabled := .Values.config.workloadIdentity.enabled | default false -}}
+{{- range $cluster := .Values.clustersConfig -}}
+{{- if and $cluster.workloadIdentity $cluster.workloadIdentity.enabled -}}
+{{- $enabled = true -}}
+{{- end -}}
+{{- end -}}
+{{- ternary "true" "false" $enabled -}}
+{{- end }}
+
+{{/*
+SA used by the proxy pod and its ClusterRoleBindings.
+Always the proxy SA — never share tfy-agent's SA under WIF. Sharing would bind the
+proxy's cluster-admin (non-strictMode) ClusterRole to the agent's automounted token.
+Configure cluster WIF claims for the proxy SA (or use dual-mode cluster token) so
+remotedialer JWTs still match; agent control-plane WIF uses the agent SA separately.
+*/}}
+{{- define "tfy-agent-proxy.podServiceAccountName" -}}
+{{- include "tfy-agent-proxy.serviceAccountName" . }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use for sds-server
 */}}
 {{- define "sds-server.serviceAccountName" -}}
@@ -415,11 +441,29 @@ Resolved CONTROL_PLANE_URL: external base URL when set, otherwise in-cluster clu
 {{- end }}
 
 {{/*
-Webhook URL for the ClusterSecretStore control-plane secret provider.
-Uses external-secrets templating (not Helm) for .remoteRef.key.
+In-cluster tfy-agent service base URL (scheme://name.namespace.svc:port).
+*/}}
+{{- define "tfy-agent.serviceUrl" -}}
+{{- printf "http://%s.%s.svc:%v" (include "tfy-agent.fullname" .) .Release.Namespace .Values.tfyAgent.service.port -}}
+{{- end }}
+
+{{/*
+Webhook URL for the ClusterSecretStore: ESO → tfy-agent → SFY.
+Agent attaches CLUSTER_TOKEN / WIF; ESO does not hold control-plane credentials.
+Uses external-secrets templating (not Helm) for .remoteRef.key — urlquery so
+keys cannot inject additional query params (e.g. cluster_secret_store=...).
 */}}
 {{- define "tfy-agent.clusterSecretStore.webhookUrl" -}}
-{{- printf "%s/api/svc/v1/control-plane/secret?secret_ref=%s" (include "tfy-agent.controlPlaneBaseURL" .) "{{ .remoteRef.key }}" -}}
+{{- printf "%s/v1/control-plane/secret?secret_ref=%s" (include "tfy-agent.serviceUrl" .) "{{ .remoteRef.key | urlquery }}" -}}
+{{- end }}
+
+{{/*
+Multi-logical-cluster webhook URL; routes via cluster_secret_store query param.
+*/}}
+{{- define "tfy-agent.clusterSecretStore.webhookUrlForStore" -}}
+{{- $storeName := .storeName -}}
+{{- $root := .root -}}
+{{- printf "%s/v1/control-plane/secret?secret_ref=%s&cluster_secret_store=%s" (include "tfy-agent.serviceUrl" $root) "{{ .remoteRef.key | urlquery }}" ($storeName | urlquery) -}}
 {{- end }}
 
 {{/*
@@ -428,15 +472,45 @@ Resolve one clustersConfig[] entry. Expects dict with keys: index, cluster.
 {{- define "tfy-agent.clustersConfig.resolved" -}}
 {{- $index := .index -}}
 {{- $cluster := .cluster -}}
+{{- $root := .root -}}
 {{- $name := required (printf "clustersConfig[%d].name is required" $index) $cluster.name -}}
 {{- $tenantName := required (printf "clustersConfig[%d].tenantName is required" $index) $cluster.tenantName -}}
 {{- $controlPlaneURL := required (printf "clustersConfig[%d].controlPlaneURL is required" $index) $cluster.controlPlaneURL | trimSuffix "/" -}}
+{{- $fqn := default "" $cluster.fqn -}}
+{{- $hasToken := false -}}
+{{- if or $cluster.token $cluster.tokenSecretKey -}}
+{{- $hasToken = true -}}
+{{- end -}}
+{{- $wifEnabled := false -}}
+{{- if and $cluster.workloadIdentity $cluster.workloadIdentity.enabled -}}
+{{- $wifEnabled = true -}}
+{{- end -}}
+{{/* Back-compat: top-level WIF + tokenless fqn implies per-entry WIF when the field is omitted. */}}
+{{- if and (not $wifEnabled) (not $hasToken) $fqn $root.Values.config.workloadIdentity.enabled -}}
+{{- $wifEnabled = true -}}
+{{- end -}}
+{{- if and (not $hasToken) (not $wifEnabled) -}}
+{{- fail (printf "clustersConfig[%d] (%s): set token/tokenSecretKey and/or workloadIdentity.enabled" $index $name) -}}
+{{- end -}}
+{{- if and $wifEnabled (not $hasToken) (not $fqn) -}}
+{{- fail (printf "clustersConfig[%d] (%s): fqn is required when workloadIdentity.enabled and token is omitted" $index $name) -}}
+{{- end -}}
+{{- if and (not $hasToken) (not $fqn) -}}
+{{- fail (printf "clustersConfig[%d] (%s): token/tokenSecretKey or fqn (WIF-only) is required" $index $name) -}}
+{{- end -}}
+{{- $tokenSecretKey := default "" $cluster.tokenSecretKey -}}
+{{- if and $hasToken (not $tokenSecretKey) -}}
+{{- $tokenSecretKey = printf "CLUSTER_TOKEN_%s" $name -}}
+{{- end -}}
 {{- dict
   "name" $name
   "tenantName" $tenantName
   "controlPlaneURL" $controlPlaneURL
+  "fqn" $fqn
   "clusterSecretStoreName" (default (printf "tfy-secret-store-%s" $tenantName) $cluster.clusterSecretStoreName)
-  "tokenSecretKey" (default (printf "CLUSTER_TOKEN_%s" $name) $cluster.tokenSecretKey)
+  "tokenSecretKey" $tokenSecretKey
+  "hasToken" $hasToken
+  "workloadIdentityEnabled" $wifEnabled
   "namespaces" (required (printf "clustersConfig[%d].namespaces is required" $index) $cluster.namespaces)
   | toJson -}}
 {{- end }}
@@ -444,12 +518,13 @@ Resolve one clustersConfig[] entry. Expects dict with keys: index, cluster.
 {{/*
 Validate that logical clusters sharing a tenant use the same ClusterSecretStore
 and controlPlaneURL, and that a ClusterSecretStore is not shared across tenants.
+Each entry must have a token and/or workloadIdentity.enabled (+ fqn when tokenless).
 */}}
 {{- define "tfy-agent.clustersConfig.validate" -}}
 {{- $seenStores := dict -}}
 {{- $seenTenants := dict -}}
 {{- range $index, $cluster := .Values.clustersConfig -}}
-{{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster) | fromJson -}}
+{{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster "root" $) | fromJson -}}
 {{- $tenantName := index $resolved "tenantName" -}}
 {{- $storeName := index $resolved "clusterSecretStoreName" -}}
 {{- $tenantConfig := printf "%s|%s" $storeName (index $resolved "controlPlaneURL") -}}
@@ -468,6 +543,18 @@ and controlPlaneURL, and that a ClusterSecretStore is not shared across tenants.
 {{- end }}
 
 {{/*
+True when any clustersConfig entry still carries a cluster token (dual-mode / token-only).
+*/}}
+{{- define "tfy-agent.clustersConfig.hasAnyToken" -}}
+{{- $has := false -}}
+{{- range $index, $cluster := .Values.clustersConfig -}}
+{{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster "root" $) | fromJson -}}
+{{- if index $resolved "hasToken" }}{{ $has = true }}{{ end -}}
+{{- end -}}
+{{- $has -}}
+{{- end }}
+
+{{/*
 Unique ClusterSecretStores derived from clustersConfig, in first-seen order.
 Namespaces are the union of the namespaces of every logical cluster using the store.
 JSON object: {stores: [{clusterSecretStoreName, controlPlaneURL, tokenSecretKey, namespaces}, ...]}.
@@ -477,7 +564,7 @@ JSON object: {stores: [{clusterSecretStoreName, controlPlaneURL, tokenSecretKey,
 {{- $storePositions := dict -}}
 {{- $stores := list -}}
 {{- range $index, $cluster := .Values.clustersConfig -}}
-{{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster) | fromJson -}}
+{{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster "root" $) | fromJson -}}
 {{- $storeName := index $resolved "clusterSecretStoreName" -}}
 {{- if hasKey $storePositions $storeName -}}
 {{- $store := index $stores (get $storePositions $storeName) -}}

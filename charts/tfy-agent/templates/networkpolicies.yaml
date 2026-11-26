@@ -63,6 +63,33 @@ spec:
       from:
         {{- toYaml $sdsIngressFrom | nindent 8 }}
 {{- end }}
+{{- $esoIngressFrom := dig "externalSecrets" "ingressFrom" list $np }}
+{{- if and .Values.tfyAgent.enabled (index .Values "external-secrets-operator" "clusterSecretStore" "create") $esoIngressFrom }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "tfy-agent.networkPolicyName" (dict "context" $ "suffix" "eso-secret-proxy") }}
+  labels:
+    {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
+  {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "tfy-agent.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+  # ExternalSecrets webhook provider calls tfy-agent /v1/control-plane/secret (agent proxies to SFY with WIF).
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.tfyAgent.service.port }}
+      from:
+        {{- toYaml $esoIngressFrom | nindent 8 }}
+{{- end }}
 {{- if or $ingressFrom $extraIngress }}
 ---
 apiVersion: networking.k8s.io/v1
