@@ -4,6 +4,7 @@ permissions:
   contents: write # only for delete-branch option
   issues: write
   pull-requests: write
+  id-token: write # Tailscale federated identity
 
 on:
   schedule:
@@ -12,10 +13,19 @@ on:
 
 jobs:
   stale:
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
-    steps: 
+    runs-on: ubuntu-latest
+    steps:
+      # actions/stale calls the GitHub API with GITHUB_TOKEN, which the org IP
+      # allow list filters. The credential only matches this file on main,
+      # which is where scheduled runs run.
+      - name: Join the tailnet for GitHub egress
+        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
+        with:
+          oauth-client-id: ${{ vars.TS_CI_STALE_CLIENT_ID }}
+          audience: ${{ vars.TS_CI_STALE_AUDIENCE }}
+          tags: tag:ci-github-egress
+          hostname: gh-${{ github.event.repository.name }}-${{ github.job }}-${{ github.run_id }}
+
       - uses: actions/stale@v9
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}

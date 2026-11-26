@@ -12,22 +12,26 @@ on:
 
 env:
   ARTIFACTORY_REGISTRY: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
-  ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
-  ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
   ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
   INFRAMOLD_ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_INFRAMOLD_PUBLIC_HELM_REGISTRY }}
 
 jobs:
   release:
 
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # JFrog OIDC token exchange
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+    # Anonymous: infra-charts is public, so the checkout needs no token and works
+    # from any IP. A token-authenticated checkout is filtered by the org IP allow
+    # list, and ubuntu-latest has no allow-listed address.
+    - name: Check out (anonymous)
+      run: |
+        git init -q .
+        git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+        git fetch -q --no-tags --depth=1 origin "+${GITHUB_SHA}:refs/remotes/origin/ci"
+        git checkout -q --detach origin/ci
 
     - name: Exclude branch-released charts from main
       if: ${{ github.ref == 'refs/heads/main' }}
@@ -58,10 +62,26 @@ jobs:
         helm repo add vector https://helm.vector.dev
         helm repo update
 
+    # Short-lived JFrog token over GitHub OIDC instead of a stored password.
+    # github-jfrog-public issues it as truefoundry-public-write-user (write on
+    # tfy-helm) and only for repos in its allowlist, in
+    # ubermold-truefoundry/jfrog/oidc.tf. Expires after an hour.
+    - name: Set up JFrog CLI (OIDC)
+      id: jfrog
+      uses: jfrog/setup-jfrog-cli@76f97e1f8bb39a6bc22052265732581d73325212 # v4.16.0
+      env:
+        JF_URL: https://tfy.jfrog.io
+      with:
+        oidc-provider-name: github-jfrog-public
+        oidc-audience: jfrog-github
+
     - name: Helm registry login
+      env:
+        JF_USER: ${{ steps.jfrog.outputs.oidc-user }}
+        JF_TOKEN: ${{ steps.jfrog.outputs.oidc-token }}
       run: |
-        helm registry login ${{ env.ARTIFACTORY_REGISTRY }} -u ${{ env.ARTIFACTORY_USERNAME }} -p ${{ env.ARTIFACTORY_PASSWORD }}
-    
+        printf '%s' "$JF_TOKEN" | helm registry login "$ARTIFACTORY_REGISTRY" -u "$JF_USER" --password-stdin
+
     - uses: actions/setup-python@v5
       with:
         python-version: '3.11'

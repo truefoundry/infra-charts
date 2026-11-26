@@ -1,55 +1,72 @@
 name: Generate Inframold Charts Artifacts Manifest
 
+# Regenerates the inframold charts' artifacts-manifest.json files. When they are
+# out of date, it hands the new files to bot-commit.yml, which pushes them onto
+# the PR branch.
+#
+# This runs the PR's own code, so it holds no write token and no allow-listed IP:
+# a pull_request run executes the PR's copy of this file, so any credential it
+# could mint, anyone with write access could mint from a branch without a merge.
+# It uploads what it generated as the `bot-commit` artifact and fails, so the PR
+# can't merge with stale manifests. The bot's commit runs this again, and that
+# run passes.
+#
+# bot-commit.yml is named after this workflow's `name:` above. Renaming either
+# one silently stops the bot commits.
 on:
   pull_request:
     branches:
       - 'main'
 
+permissions:
+  contents: read
+
 jobs:
   changes:
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+    runs-on: ubuntu-latest
     outputs:
       relevant: ${{ steps.filter.outputs.relevant }}
     steps:
+      # Was dorny/paths-filter, which lists a PR's files through the GitHub API
+      # with GITHUB_TOKEN, and that call is filtered by the org IP allow list on
+      # ubuntu-latest. GITHUB_SHA is the PR's merge commit and its first parent
+      # is the base tip, so an anonymous fetch gives the same list.
       - name: Detect Relevant Path Changes
-        uses: dorny/paths-filter@v4
         id: filter
-        with:
-          filters: |
-            relevant:
-              - '.github/workflows/update-artifacts.yml'
-              - 'charts/tfy-k8s-aws-eks-inframold/**'
-              - 'charts/tfy-k8s-azure-aks-inframold/**'
-              - 'charts/tfy-k8s-civo-talos-inframold/**'
-              - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-              - 'charts/tfy-k8s-generic-inframold/**'
-              - 'scripts/generate-artifacts-manifest/**'
-              - 'scripts/upload-artifacts/**'
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags --depth=2 origin "+${GITHUB_SHA}:refs/remotes/origin/merge"
+          changed="$(git diff --name-only origin/merge^1 origin/merge)"
+          if grep -qE '^(\.github/workflows/update-artifacts\.yml$|charts/tfy-k8s-(aws-eks|azure-aks|civo-talos|gcp-gke-standard|generic)-inframold/|scripts/(generate-artifacts-manifest|upload-artifacts)/)' <<< "$changed"; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+          fi
 
   update-artifacts:
     needs: changes
     if: needs.changes.outputs.relevant == 'true'
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+    runs-on: ubuntu-latest
     permissions:
-      contents: write
-      id-token: write
+      contents: read
+      id-token: write # AWS role for public ECR
     env:
-      ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
-      ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
       ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.TFY_GITHUB_TOKEN }}
+      # Anonymous: infra-charts is public, so no token and no allow-listed IP.
+      # The PR's head, not its merge commit, because that is what the bot
+      # commits onto.
+      - name: Check out the PR head (anonymous)
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags --depth=1 origin "+${HEAD_SHA}:refs/remotes/origin/head"
+          git checkout -q --detach origin/head
 
       - name: Setup Kubectl
         uses: azure/setup-kubectl@v3
@@ -73,10 +90,13 @@ jobs:
           password: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_PASSWORD }}
           registry: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
 
+      # Pull-only role: logging in only raises the public ECR pull rate limit.
+      # The push role (PUBLIC_ECR_IAM_ROLE_ARN, sync-image.yaml) does not trust
+      # this repo's pull_request runs, and must not.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.PUBLIC_ECR_IAM_ROLE_ARN }}
+          role-to-assume: ${{ secrets.PUBLIC_ECR_PULL_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
@@ -109,29 +129,46 @@ jobs:
           charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
           scripts/generate-artifacts-manifest/multi-arch-image-whitelist.json
 
-      - name: Check if Artifacts Manifest Files have Changes
+      - name: Collect updated manifests
         id: manifests_changed
         run: |
-          if git diff --quiet -- 'charts/*/artifacts-manifest.json'; then
+          changed="$(git diff --name-only -- 'charts/*/artifacts-manifest.json')"
+          if [ -z "$changed" ]; then
+            echo "Artifacts manifests are up to date."
             echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "Artifacts manifest files have changes"
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          while IFS= read -r f; do
+            if [ -L "$f" ]; then
+              echo "::error::${f} is a symlink. Not collecting it."
+              exit 1
+            fi
+            mkdir -p "${RUNNER_TEMP}/bot-commit/$(dirname "$f")"
+            cp "$f" "${RUNNER_TEMP}/bot-commit/${f}"
+            echo "Out of date: ${f}"
+          done <<< "$changed"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Commit & Push Updates
+      - name: Hand the manifests to bot-commit.yml
         if: steps.manifests_changed.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bot-commit
+          path: ${{ runner.temp }}/bot-commit
+          retention-days: 1
+
+      - name: Fail until the bot commits
+        if: steps.manifests_changed.outputs.changed == 'true'
+        env:
+          FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git add .
-          if git diff --cached --quiet; then
-            echo "Nothing to commit"
+          if [ "$FORK" = "true" ]; then
+            echo "::error::Artifacts manifests are out of date. Regenerate them and push the result. The bot can't push to a fork."
           else
-            git commit -am "[CI] Update charts artifacts manifest files" --signoff
-            git pull origin --rebase
-            git push
+            echo "::error::Artifacts manifests were out of date. bot-commit.yml is pushing the regenerated files to this branch, and this check passes on that commit."
           fi
+          exit 1
+
   artifact-generation-gate:
     needs: [ changes, update-artifacts ]
     if: always()

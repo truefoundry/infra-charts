@@ -9,7 +9,6 @@ metadata:
   annotations:
     {{- include "tfy-agent-proxy.commonAnnotations" . | nindent 4 }}
 rules:
-  {{- if or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode }}
   {{- if not .Values.config.allowedNamespaces }}
   - apiGroups: [""]
     resources: ["namespaces"]
@@ -17,7 +16,7 @@ rules:
   {{- end }}
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
-    verbs: ["get", "list"]
+    verbs: ["list"]
 
   {{/* This allows us to list statefulsets and deployments under a helm chart to allow pausing workloads */}}
   - apiGroups: ["apps"]
@@ -46,22 +45,12 @@ rules:
     resources: ["customresourcedefinitions"]
     verbs: ["list"]
 
-  {{/* Cluster-wide list for ExternalSecret discovery across namespaces */}}
-  - apiGroups: ["external-secrets.io"]
-    resources: ["externalsecrets"]
-    verbs: ["list"]
-
   {{/* This allows us to read Karpenter configuration and status to troubleshoot cluster auto scaling issues */}}
   {{/* This allows us to read Karpenter NodeOverlays to support fractional GPUs */}}
   - apiGroups: ["karpenter.k8s.aws", "karpenter.sh"]
     resources: ["ec2nodeclasses", "nodepools", "nodeoverlays"]
     verbs: ["list"]
 
-  {{- else }}
-  - apiGroups: ["*"]
-    resources: ["*"]
-    verbs: ["*"]
-  {{- end }}
   {{- range $rule := .Values.tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules }}
   - apiGroups: {{ $rule.apiGroups | toJson }}
     resources: {{ $rule.resources | toJson }}

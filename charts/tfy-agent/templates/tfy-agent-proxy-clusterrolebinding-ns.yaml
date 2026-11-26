@@ -1,6 +1,5 @@
 {{- if .Values.tfyAgentProxy.enabled -}}
 {{- if .Values.tfyAgentProxy.clusterRole.enable -}}
-{{- if .Values.tfyAgentProxy.clusterRole.strictMode }}
 {{- if not .Values.config.allowedNamespaces }}
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -18,7 +17,6 @@ roleRef:
   kind: ClusterRole
   name: {{ include "tfy-agent-proxy.fullname" . }}-ns
   apiGroup: rbac.authorization.k8s.io
-{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
