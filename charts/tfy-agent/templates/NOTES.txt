@@ -28,8 +28,9 @@ echo "Visit http://127.0.0.1:8080 to use your application"
 kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
 {{- if and .Values.tfyAgent.enabled (index .Values "external-secrets-operator" "clusterSecretStore" "create") (not .Values.networkPolicy.enabled) }}
 
-WARNING: ClusterSecretStore webhooks call tfy-agent's secret proxy without a caller credential.
-Enable networkPolicy.enabled so only External Secrets Operator pods (networkPolicy.externalSecrets.ingressFrom) can reach that endpoint.
+NOTE: ClusterSecretStore webhooks send Bearer cluster token to tfy-agent; the agent
+validates it then calls SFY with WIF when enabled. Enable networkPolicy.enabled so only
+External Secrets Operator pods (networkPolicy.externalSecrets.ingressFrom) can reach that endpoint.
 {{- end }}
 {{- if and (eq (include "tfy-agent.workloadIdentity.mountEnabled" .) "true") .Values.tfyAgentProxy.enabled }}
 

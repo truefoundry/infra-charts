@@ -91,7 +91,7 @@ global:
 ## Parameters to configure tfyAgent and tfyAgentProxy
 ##
 config:
-  ## @param config.clusterToken Token to connect to the control plane. Optional when config.workloadIdentity.enabled and config.clusterFqn are set.
+  ## @param config.clusterToken Token to connect to the control plane. Required (cluster token is mandatory; WIF is additive dual-mode).
   ##
   clusterToken: ""
 
@@ -99,7 +99,7 @@ config:
   ##
   clusterTokenSecret: ""
 
-  ## @param config.clusterFqn Cluster FQN (tenant:name). Required when clusterToken is omitted (WIF-only); always sent as x-tfy-cluster-fqn.
+  ## @param config.clusterFqn Cluster FQN (tenant:name). Optional when clusterToken is set (must match token FQN); sent as x-tfy-cluster-fqn.
   ##
   clusterFqn: ""
 
@@ -184,9 +184,9 @@ config:
   ## @param clustersConfig Logical clusters served by this agent. Multi-logical-cluster mode is enabled automatically when this list has more than one entry.
   ## Tokens are written to the chart-managed Secret. When config.clusterTokenSecret is set, omit token and
   ## provide tokenSecretKey matching a key in that existing Secret.
-  ## Each entry must set token/tokenSecretKey, or fqn when config.workloadIdentity.enabled (tokenless WIF).
-  ## Dual-mode: token/tokenSecretKey with config.workloadIdentity.enabled (same projected JWT for all entries).
-  ## Token-only: token/tokenSecretKey with config.workloadIdentity.enabled=false.
+  ## Each entry must set token/tokenSecretKey (cluster token is mandatory).
+  ## Dual-mode: also enable config.workloadIdentity (same projected JWT for all entries).
+  ## ESO ClusterSecretStore sends the cluster token to tfy-agent; agent validates it then calls SFY with WIF.
   ## When namespaces is a concrete list, the tenant ClusterSecretStore is restricted to those namespaces
   ## via spec.conditions. namespaces: ["*"] leaves the store usable from every namespace.
   ##
@@ -200,12 +200,12 @@ clustersConfig: []
 #     tenantName: tenant-a
 #     namespaces: ["*"]
 #     # clusterSecretStoreName: custom-store
-#   - name: team-b-wif-only
-#     fqn: tenant-b:cluster-b
+#   - name: team-b
+#     tokenSecretKey: CLUSTER_TOKEN_TEAM_B
 #     controlPlaneURL: https://tenant-b.example.com
 #     tenantName: tenant-b
 #     namespaces: ["*"]
-# # With the above WIF-only entry, also set:
+# # Optional dual-mode WIF (config-level):
 # # config.workloadIdentity.enabled: true
 # # config.workloadIdentity.audience: https://shared-audience.example.com
 
@@ -313,7 +313,7 @@ tfyAgent:
     ##
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
-    tag: "8ab5fbdc2a54624e6cb4ddedb3be5ad95f582758"
+    tag: "73042c7c322f9f395ef605b094894ba87c420251"
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -955,8 +955,10 @@ networkPolicy:
     ##   - namespaceSelector: {}
 
 ## @section eso (external-secrets operator) configuration parameters
-## ClusterSecretStore webhooks call tfy-agent (/v1/control-plane/secret); the agent
-## attaches CLUSTER_TOKEN and/or WIF and proxies to SFY. ESO does not hold CP credentials.
+## ClusterSecretStore webhooks call tfy-agent (/v1/control-plane/secret) with Bearer
+## cluster token. Agent validates the token, then proxies to SFY with WIF (when enabled).
+## The token Secret must be labeled external-secrets.io/type=webhook (chart-managed Secret
+## already is; set the same label on config.clusterTokenSecret if you supply your own).
 ##
 external-secrets-operator:
   ## @param external-secrets-operator.enabled Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent.

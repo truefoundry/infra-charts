@@ -93,7 +93,7 @@ spec:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" .}}
-                  optional: {{ if or (eq (include "tfy-agent.workloadIdentity.mountEnabled" .) "true") (gt (len .Values.clustersConfig) 1) }}true{{ else }}false{{ end }}
+                  optional: {{ if gt (len .Values.clustersConfig) 1 }}true{{ else }}false{{ end }}
             {{- end }}
             {{- if .Values.config.clusterFqn }}
             - name: CLUSTER_FQN
