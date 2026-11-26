@@ -462,11 +462,13 @@ In-cluster tfy-agent service base URL (scheme://name.namespace.svc:port).
 {{/*
 Webhook URL for the ClusterSecretStore: ESO → tfy-agent → SFY.
 ESO sends Bearer cluster token; agent validates it, then calls SFY with WIF.
-Uses external-secrets templating (not Helm) for .remoteRef.key — urlquery so
-keys cannot inject additional query params (e.g. cluster_secret_store=...).
+Uses external-secrets templating (not Helm) for .remoteRef.key.
+Do NOT pipe remoteRef.key through ESO urlquery: ESO's webhook HTTP client
+already encodes the query string, so urlquery double-encodes and SFY returns
+400 Invalid secret reference (tfy-secret%3A%2F%2F...).
 */}}
 {{- define "tfy-agent.clusterSecretStore.webhookUrl" -}}
-{{- printf "%s/v1/control-plane/secret?secret_ref=%s" (include "tfy-agent.serviceUrl" .) "{{ .remoteRef.key | urlquery }}" -}}
+{{- printf "%s/v1/control-plane/secret?secret_ref=%s" (include "tfy-agent.serviceUrl" .) "{{ .remoteRef.key }}" -}}
 {{- end }}
 
 {{/*
@@ -475,7 +477,7 @@ Multi-logical-cluster webhook URL; routes via cluster_secret_store query param.
 {{- define "tfy-agent.clusterSecretStore.webhookUrlForStore" -}}
 {{- $storeName := .storeName -}}
 {{- $root := .root -}}
-{{- printf "%s/v1/control-plane/secret?secret_ref=%s&cluster_secret_store=%s" (include "tfy-agent.serviceUrl" $root) "{{ .remoteRef.key | urlquery }}" ($storeName | urlquery) -}}
+{{- printf "%s/v1/control-plane/secret?secret_ref=%s&cluster_secret_store=%s" (include "tfy-agent.serviceUrl" $root) "{{ .remoteRef.key }}" ($storeName | urlquery) -}}
 {{- end }}
 
 {{/*
