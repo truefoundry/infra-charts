@@ -176,7 +176,7 @@ spec:
               - serviceAccountToken:
                   path: {{ .Values.config.workloadIdentity.tokenFileName | quote }}
                   expirationSeconds: {{ .Values.config.workloadIdentity.expirationSeconds }}
-                  audience: {{ .Values.config.workloadIdentity.audience | quote }}
+                  audience: {{ include "tfy-agent.workloadIdentity.audience" . | quote }}
         {{- end }}
         {{- if gt (len .Values.clustersConfig) 1 }}
         - name: clusters-config

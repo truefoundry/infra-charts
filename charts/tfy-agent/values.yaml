@@ -163,20 +163,17 @@ config:
   #   - default
   #   - namespace-1
 
-  ## Kubernetes Workload Identity Federation for control-plane auth (pod mount settings).
-  ## For multi-cluster, prefer clustersConfig[].workloadIdentity.enabled per entry.
-  ## Top-level enabled still covers single-cluster mode and mounts the projected JWT when
-  ## any clustersConfig entry enables WIF (or when this flag is true).
+  ## Kubernetes Workload Identity Federation for control-plane auth (config-level only).
+  ## When enabled, mounts one projected SA JWT on tfy-agent, tfy-agent-proxy, and sds-server
+  ## and every logical cluster sends it as x-tfy-workload-token.
   ## Enable only after the TrueFoundry cluster has identity_provider_mapping set
-  ## (WIF Group toggle on) with claims matching this chart's service account (namespace + name).
-  ## When WIF is mounted, tfy-agent, tfy-agent-proxy, and sds-server share the agent SA
-  ## so one WIF mapping covers all control-plane connections.
+  ## (WIF Group toggle on) with claims matching each component's service account.
   ##
   workloadIdentity:
-    ## @param config.workloadIdentity.enabled Mount a projected SA JWT (single-cluster, or force mount). Also implied when any clustersConfig entry sets workloadIdentity.enabled.
+    ## @param config.workloadIdentity.enabled Mount a projected SA JWT and enable WIF for all control-plane connections
     enabled: false
-    ## @param config.workloadIdentity.audience JWT audience; must match the Kubernetes Identity Provider audiences in TrueFoundry
-    audience: truefoundry
+    ## @param config.workloadIdentity.audience JWT audience; must match the Kubernetes Identity Provider audiences in TrueFoundry. Single-cluster: defaults to config.controlPlaneURL when empty. Multi-cluster (clustersConfig length > 1): required.
+    audience: ""
     ## @param config.workloadIdentity.expirationSeconds Projected token lifetime (kubelet rotates before expiry)
     expirationSeconds: 3600
     ## @param config.workloadIdentity.mountPath Directory where the token file is mounted
@@ -187,10 +184,9 @@ config:
   ## @param clustersConfig Logical clusters served by this agent. Multi-logical-cluster mode is enabled automatically when this list has more than one entry.
   ## Tokens are written to the chart-managed Secret. When config.clusterTokenSecret is set, omit token and
   ## provide tokenSecretKey matching a key in that existing Secret.
-  ## Each entry must set token/tokenSecretKey and/or workloadIdentity.enabled.
-  ## Tokenless WIF: workloadIdentity.enabled + fqn; omit token/tokenSecretKey.
-  ## Dual-mode: token/tokenSecretKey + workloadIdentity.enabled (same projected JWT for all WIF entries).
-  ## Token-only: token/tokenSecretKey without workloadIdentity.enabled.
+  ## Each entry must set token/tokenSecretKey, or fqn when config.workloadIdentity.enabled (tokenless WIF).
+  ## Dual-mode: token/tokenSecretKey with config.workloadIdentity.enabled (same projected JWT for all entries).
+  ## Token-only: token/tokenSecretKey with config.workloadIdentity.enabled=false.
   ## When namespaces is a concrete list, the tenant ClusterSecretStore is restricted to those namespaces
   ## via spec.conditions. namespaces: ["*"] leaves the store usable from every namespace.
   ##
@@ -206,11 +202,12 @@ clustersConfig: []
 #     # clusterSecretStoreName: custom-store
 #   - name: team-b-wif-only
 #     fqn: tenant-b:cluster-b
-#     workloadIdentity:
-#       enabled: true
 #     controlPlaneURL: https://tenant-b.example.com
 #     tenantName: tenant-b
 #     namespaces: ["*"]
+# # With the above WIF-only entry, also set:
+# # config.workloadIdentity.enabled: true
+# # config.workloadIdentity.audience: https://shared-audience.example.com
 
 ## @param nameOverride String to override partial name passed in helm install command
 ##
