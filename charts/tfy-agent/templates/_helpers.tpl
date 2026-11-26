@@ -461,7 +461,7 @@ In-cluster tfy-agent service base URL (scheme://name.namespace.svc:port).
 
 {{/*
 Webhook URL for the ClusterSecretStore: ESO → tfy-agent → SFY.
-Agent attaches CLUSTER_TOKEN / WIF; ESO does not hold control-plane credentials.
+ESO sends Bearer cluster token; agent validates it, then calls SFY with WIF.
 Uses external-secrets templating (not Helm) for .remoteRef.key — urlquery so
 keys cannot inject additional query params (e.g. cluster_secret_store=...).
 */}}
@@ -480,7 +480,7 @@ Multi-logical-cluster webhook URL; routes via cluster_secret_store query param.
 
 {{/*
 Resolve one clustersConfig[] entry. Expects dict with keys: index, cluster.
-WIF is config-level only (config.workloadIdentity.enabled); tokenless entries need fqn.
+Cluster token is mandatory; WIF (config.workloadIdentity.enabled) is additive dual-mode.
 */}}
 {{- define "tfy-agent.clustersConfig.resolved" -}}
 {{- $index := .index -}}
@@ -494,15 +494,12 @@ WIF is config-level only (config.workloadIdentity.enabled); tokenless entries ne
 {{- if or $cluster.token $cluster.tokenSecretKey -}}
 {{- $hasToken = true -}}
 {{- end -}}
+{{- if not $hasToken -}}
+{{- fail (printf "clustersConfig[%d] (%s): token/tokenSecretKey is required (cluster token is mandatory)" $index $name) -}}
+{{- end -}}
 {{- $wifEnabled := $root.Values.config.workloadIdentity.enabled | default false -}}
-{{- if and (not $hasToken) (not $wifEnabled) -}}
-{{- fail (printf "clustersConfig[%d] (%s): set token/tokenSecretKey, or enable config.workloadIdentity and set fqn" $index $name) -}}
-{{- end -}}
-{{- if and (not $hasToken) (not $fqn) -}}
-{{- fail (printf "clustersConfig[%d] (%s): fqn is required when token is omitted (WIF-only)" $index $name) -}}
-{{- end -}}
 {{- $tokenSecretKey := default "" $cluster.tokenSecretKey -}}
-{{- if and $hasToken (not $tokenSecretKey) -}}
+{{- if not $tokenSecretKey -}}
 {{- $tokenSecretKey = printf "CLUSTER_TOKEN_%s" $name -}}
 {{- end -}}
 {{- dict
@@ -521,7 +518,7 @@ WIF is config-level only (config.workloadIdentity.enabled); tokenless entries ne
 {{/*
 Validate that logical clusters sharing a tenant use the same ClusterSecretStore
 and controlPlaneURL, and that a ClusterSecretStore is not shared across tenants.
-Each entry must have a token and/or config.workloadIdentity.enabled (+ fqn when tokenless).
+Each entry must have token/tokenSecretKey (cluster token is mandatory).
 */}}
 {{- define "tfy-agent.clustersConfig.validate" -}}
 {{- $seenStores := dict -}}
