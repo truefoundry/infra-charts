@@ -57,7 +57,7 @@ spec:
               - serviceAccountToken:
                   path: {{ .Values.config.workloadIdentity.tokenFileName | quote }}
                   expirationSeconds: {{ .Values.config.workloadIdentity.expirationSeconds }}
-                  audience: {{ .Values.config.workloadIdentity.audience | quote }}
+                  audience: {{ include "tfy-agent.workloadIdentity.audience" . | quote }}
         {{- end }}
         {{- if gt (len .Values.clustersConfig) 1 }}
         - name: clusters-config
@@ -103,6 +103,10 @@ spec:
             {{- if .Values.config.clusterFqn }}
             - name: CLUSTER_FQN
               value: {{ .Values.config.clusterFqn | quote }}
+            {{- end }}
+            {{- if and (le (len .Values.clustersConfig) 1) .Values.config.tenantName }}
+            - name: TENANT_NAME
+              value: {{ .Values.config.tenantName | quote }}
             {{- end }}
             {{- if (eq (include "tfy-agent.workloadIdentity.mountEnabled" .) "true") }}
             - name: WORKLOAD_IDENTITY_TOKEN_FILE

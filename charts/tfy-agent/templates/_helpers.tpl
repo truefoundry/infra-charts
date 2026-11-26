@@ -360,18 +360,30 @@ Create the name of the service account to use for tfy-agent-proxy
 {{- end }}
 
 {{/*
-True when the projected SA JWT volume/env must be mounted: top-level
-config.workloadIdentity.enabled, or any clustersConfig entry with
-workloadIdentity.enabled (multi-cluster per-entry WIF).
+True when the projected SA JWT volume/env must be mounted (config-level WIF only).
 */}}
 {{- define "tfy-agent.workloadIdentity.mountEnabled" -}}
-{{- $enabled := .Values.config.workloadIdentity.enabled | default false -}}
-{{- range $cluster := .Values.clustersConfig -}}
-{{- if and $cluster.workloadIdentity $cluster.workloadIdentity.enabled -}}
-{{- $enabled = true -}}
+{{- ternary "true" "false" (.Values.config.workloadIdentity.enabled | default false) -}}
+{{- end }}
+
+{{/*
+Projected JWT audience. Uses config.workloadIdentity.audience when set.
+Single-cluster: defaults to config.controlPlaneURL when audience is empty.
+Multi-cluster (len clustersConfig > 1): audience is required.
+*/}}
+{{- define "tfy-agent.workloadIdentity.audience" -}}
+{{- $aud := .Values.config.workloadIdentity.audience | default "" | toString | trim -}}
+{{- if $aud -}}
+{{- $aud -}}
+{{- else if gt (len .Values.clustersConfig) 1 -}}
+{{- fail "config.workloadIdentity.audience is required when clustersConfig has more than one entry" -}}
+{{- else -}}
+{{- $cp := .Values.config.controlPlaneURL | default "" | toString | trimSuffix "/" -}}
+{{- if not $cp -}}
+{{- fail "config.workloadIdentity.audience is required when config.controlPlaneURL is empty (set audience or controlPlaneURL for single-cluster WIF)" -}}
 {{- end -}}
+{{- $cp -}}
 {{- end -}}
-{{- ternary "true" "false" $enabled -}}
 {{- end }}
 
 {{/*
@@ -468,6 +480,7 @@ Multi-logical-cluster webhook URL; routes via cluster_secret_store query param.
 
 {{/*
 Resolve one clustersConfig[] entry. Expects dict with keys: index, cluster.
+WIF is config-level only (config.workloadIdentity.enabled); tokenless entries need fqn.
 */}}
 {{- define "tfy-agent.clustersConfig.resolved" -}}
 {{- $index := .index -}}
@@ -481,22 +494,12 @@ Resolve one clustersConfig[] entry. Expects dict with keys: index, cluster.
 {{- if or $cluster.token $cluster.tokenSecretKey -}}
 {{- $hasToken = true -}}
 {{- end -}}
-{{- $wifEnabled := false -}}
-{{- if and $cluster.workloadIdentity $cluster.workloadIdentity.enabled -}}
-{{- $wifEnabled = true -}}
-{{- end -}}
-{{/* Back-compat: top-level WIF + tokenless fqn implies per-entry WIF when the field is omitted. */}}
-{{- if and (not $wifEnabled) (not $hasToken) $fqn $root.Values.config.workloadIdentity.enabled -}}
-{{- $wifEnabled = true -}}
-{{- end -}}
+{{- $wifEnabled := $root.Values.config.workloadIdentity.enabled | default false -}}
 {{- if and (not $hasToken) (not $wifEnabled) -}}
-{{- fail (printf "clustersConfig[%d] (%s): set token/tokenSecretKey and/or workloadIdentity.enabled" $index $name) -}}
-{{- end -}}
-{{- if and $wifEnabled (not $hasToken) (not $fqn) -}}
-{{- fail (printf "clustersConfig[%d] (%s): fqn is required when workloadIdentity.enabled and token is omitted" $index $name) -}}
+{{- fail (printf "clustersConfig[%d] (%s): set token/tokenSecretKey, or enable config.workloadIdentity and set fqn" $index $name) -}}
 {{- end -}}
 {{- if and (not $hasToken) (not $fqn) -}}
-{{- fail (printf "clustersConfig[%d] (%s): token/tokenSecretKey or fqn (WIF-only) is required" $index $name) -}}
+{{- fail (printf "clustersConfig[%d] (%s): fqn is required when token is omitted (WIF-only)" $index $name) -}}
 {{- end -}}
 {{- $tokenSecretKey := default "" $cluster.tokenSecretKey -}}
 {{- if and $hasToken (not $tokenSecretKey) -}}
@@ -518,7 +521,7 @@ Resolve one clustersConfig[] entry. Expects dict with keys: index, cluster.
 {{/*
 Validate that logical clusters sharing a tenant use the same ClusterSecretStore
 and controlPlaneURL, and that a ClusterSecretStore is not shared across tenants.
-Each entry must have a token and/or workloadIdentity.enabled (+ fqn when tokenless).
+Each entry must have a token and/or config.workloadIdentity.enabled (+ fqn when tokenless).
 */}}
 {{- define "tfy-agent.clustersConfig.validate" -}}
 {{- $seenStores := dict -}}
