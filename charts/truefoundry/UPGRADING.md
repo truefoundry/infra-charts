@@ -2,7 +2,8 @@
 
 `tfy-llm-gateway.enableOtelBuffer` is **true by default**. On upgrade, the chart deploys
 `tfy-otel-buffer` and the gateway exports traces to it over OTLP; the buffer forwards to
-`<global.controlPlaneURL>/api/otel/v1/traces`. That requires `global.controlPlaneURL` and a
+`http://<release>-tfy-proxy:8080/api/otel/v1/traces` (set via
+`tfy-llm-gateway.tfy-otel-buffer.forward.controlPlaneURL`). That requires a
 StorageClass that can provision the buffer PVCs (defaults: 3×22Gi ReadWriteOnce).
 
 To keep exporting traces to the control plane directly (previous default behavior):
