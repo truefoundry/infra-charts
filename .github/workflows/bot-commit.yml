@@ -19,8 +19,10 @@ name: Bot commit
 # commit.
 on:
   workflow_run:
+    # Names are glob patterns: [ ] must be escaped or the whole trigger
+    # fails to parse (startup_failure / Unknown event) and Bot commit never runs.
     workflows:
-      - "[CI/CD] Update README metadata"
+      - '\[CI/CD\] Update README metadata'
       - Generate Inframold Charts Artifacts Manifest
     types: [completed]
 
