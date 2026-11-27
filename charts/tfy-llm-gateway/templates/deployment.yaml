@@ -66,9 +66,11 @@ spec:
             {{- include "tfy-llm-gateway.env" . | trim | nindent 12 }}
           image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
+          args:
+            {{- include "tfy-llm-gateway.args" . | nindent 12 }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ include "tfy-llm-gateway.port" . }}
               protocol: TCP
           resources:
             {{- include "tfy-llm-gateway.resources" . | nindent 12 }}
@@ -76,7 +78,7 @@ spec:
           livenessProbe:
             httpGet:
               path: {{ .Values.healthcheck.liveness.path }}
-              port: {{ .Values.healthcheck.liveness.port }}
+              port: {{ .Values.healthcheck.liveness.port | default (include "tfy-llm-gateway.port" .) }}
               {{- if ((.Values.global).mTLS).enabled }}
               scheme: HTTPS
               {{- else }}
@@ -90,7 +92,7 @@ spec:
           readinessProbe:
             httpGet:
               path: {{ .Values.healthcheck.readiness.path }}
-              port: {{ .Values.healthcheck.readiness.port }}
+              port: {{ .Values.healthcheck.readiness.port | default (include "tfy-llm-gateway.port" .) }}
               {{- if ((.Values.global).mTLS).enabled }}
               scheme: HTTPS
               {{- else }}
@@ -108,6 +110,7 @@ spec:
           {{- if gt (len .Values.extraVolumeMounts) 0 }}
           {{- toYaml .Values.extraVolumeMounts | nindent 10 }}
           {{- end }}
+          {{- include "tfy-llm-gateway.controlPlaneSaToken.volumeMount" . | nindent 10 }}
           {{- include "tfy-llm-gateway.mtls.volumeMount" . | nindent 10 }}
           {{- if .Values.oidc.enabled }}
           - name: oidc-config
@@ -161,6 +164,7 @@ spec:
       {{- if gt (len .Values.extraVolumes) 0 }}
       {{- toYaml .Values.extraVolumes | nindent 6 }}
       {{- end }}
+      {{- include "tfy-llm-gateway.controlPlaneSaToken.volume" . | nindent 6 }}
       {{- include "tfy-llm-gateway.mtls.volume" . | nindent 6 }}
       {{- if .Values.oidc.enabled }}
       - name: oidc-config

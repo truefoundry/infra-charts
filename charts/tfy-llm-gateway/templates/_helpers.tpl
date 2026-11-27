@@ -32,6 +32,49 @@ Expand the name of the chart.
 {{- end }}
 {{- end -}}
 
+{{/*
+  Projected SA token for control-plane Kubernetes IdP dual-auth.
+  Audience defaults to global.controlPlaneURL (must match IdP Allowed Audiences).
+  Installation identity is not in this JWT — set global.gatewayInstallationName → GATEWAY_INSTALLATION_NAME.
+*/}}
+{{- define "tfy-llm-gateway.controlPlaneSaToken.audience" -}}
+{{- $cfg := .Values.controlPlaneSaToken | default dict -}}
+{{- $aud := $cfg.audience | default "" -}}
+{{- if $aud -}}
+{{- $aud -}}
+{{- else -}}
+{{- .Values.global.controlPlaneURL | default "" -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "tfy-llm-gateway.controlPlaneSaToken.enabled" -}}
+{{- $cfg := .Values.controlPlaneSaToken | default dict -}}
+{{- if and ($cfg.enabled | default false) (include "tfy-llm-gateway.controlPlaneSaToken.audience" .) -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{- define "tfy-llm-gateway.controlPlaneSaToken.volume" -}}
+{{- if eq (include "tfy-llm-gateway.controlPlaneSaToken.enabled" .) "true" }}
+- name: tfy-control-plane-sa-token
+  projected:
+    sources:
+      - serviceAccountToken:
+          audience: {{ include "tfy-llm-gateway.controlPlaneSaToken.audience" . | quote }}
+          expirationSeconds: 3600
+          path: token
+{{- end }}
+{{- end -}}
+
+{{- define "tfy-llm-gateway.controlPlaneSaToken.volumeMount" -}}
+{{- if eq (include "tfy-llm-gateway.controlPlaneSaToken.enabled" .) "true" }}
+{{- $cfg := .Values.controlPlaneSaToken | default dict -}}
+- name: tfy-control-plane-sa-token
+  mountPath: {{ $cfg.mountPath | default "/var/run/secrets/tfy" }}
+  readOnly: true
+{{- end }}
+{{- end -}}
+
 
 {{- define "tfy-llm-gateway.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
@@ -258,10 +301,34 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if not .Values.proxy.tls.secretName }}
 {{- fail "proxy.tls.enabled is true but proxy.tls.secretName is empty. Set proxy.tls.secretName to a Secret containing tls.crt and tls.key." }}
 {{- end }}
-{{- if eq (int .Values.proxy.containerPort) (int .Values.service.port) }}
-{{- fail "proxy.containerPort must differ from service.port (gateway listens on service.port; the proxy cannot use the same port)." }}
+{{- if eq (int .Values.proxy.containerPort) (int (include "tfy-llm-gateway.port" .)) }}
+{{- fail (printf "proxy.containerPort must differ from the gateway port (%v); the gateway already listens on it." (include "tfy-llm-gateway.port" .)) }}
 {{- end }}
 {{- end }}
+{{- end -}}
+
+{{/*
+  Container args, appended to the image ENTRYPOINT. The image declares the whole
+  command as ENTRYPOINT and sets no CMD, so args extend it instead of replacing it
+  and the command never has to be re-declared here. `--port=<n>` comes first so the
+  server reads it before anything in `extraArgs` -- it takes the first match -- and the
+  rest of `extraArgs` is passed through for any other flag the server grows.
+*/}}
+{{- define "tfy-llm-gateway.args" -}}
+{{- $args := list (printf "--port=%s" (include "tfy-llm-gateway.port" .)) -}}
+{{- range .Values.extraArgs -}}
+{{- $args = append $args . -}}
+{{- end -}}
+{{- toYaml $args -}}
+{{- end -}}
+
+{{/*
+  The port the gateway runs on, and the single source of truth for it. One value
+  moves everything that has to agree: the --port argument, containerPort, the
+  probes, the Caddy sidecar's loopback upstream, the Service and the route backends.
+*/}}
+{{- define "tfy-llm-gateway.port" -}}
+{{- .Values.service.port | default 8787 -}}
 {{- end -}}
 
 {{/*
@@ -318,6 +385,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Validate Redis and OTEL buffer configuration.
 */}}
 {{- define "tfy-llm-gateway.validate" -}}
+{{- include "tfy-llm-gateway.bootstrap.validate" . -}}
 {{- if and .Values.redis.enabled .Values.externalRedis.enabled -}}
 {{- fail "redis.enabled and externalRedis.enabled cannot both be true" -}}
 {{- end -}}

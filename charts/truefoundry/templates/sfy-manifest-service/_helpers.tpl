@@ -232,35 +232,35 @@ Resource Tier
 
 {{- define "sfy-manifest-service.defaultResources.small"}}
 requests:
-  cpu: 50m
-  memory: 128Mi
-  ephemeral-storage: 128Mi
-limits:
   cpu: 100m
   memory: 256Mi
   ephemeral-storage: 256Mi
+limits:
+  cpu: 200m
+  memory: 512Mi
+  ephemeral-storage: 512Mi
 {{- end }}
 
 {{- define "sfy-manifest-service.defaultResources.medium"}}
 requests:
-  cpu: 50m
-  memory: 128Mi
-  ephemeral-storage: 128Mi
+  cpu: 150m
+  memory: 384Mi
+  ephemeral-storage: 384Mi
 limits:
-  cpu: 100m
-  memory: 256Mi
-  ephemeral-storage: 256Mi
+  cpu: 300m
+  memory: 768Mi
+  ephemeral-storage: 768Mi
 {{- end }}
 
 {{- define "sfy-manifest-service.defaultResources.large"}}
 requests:
-  cpu: 100m
-  memory: 256Mi
-  ephemeral-storage: 128Mi
+  cpu: 300m
+  memory: 768Mi
+  ephemeral-storage: 384Mi
 limits:
-  cpu: 200m
-  memory: 512Mi
-  ephemeral-storage: 256Mi
+  cpu: 600m
+  memory: 1536Mi
+  ephemeral-storage: 768Mi
 {{- end }}
 
 {{- define "sfy-manifest-service.resources" }}
