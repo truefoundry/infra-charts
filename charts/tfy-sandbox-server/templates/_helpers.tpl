@@ -5,6 +5,16 @@
 {{- default .Release.Namespace .Values.global.namespaceOverride }}
 {{- end }}
 
+{{/* Cluster DNS domain for in-cluster service FQDNs. */}}
+{{- define "tfy-sandbox-server.clusterDomain" -}}
+{{- default "cluster.local" (.Values.global).clusterDomain -}}
+{{- end -}}
+
+{{/* Service FQDN, also used by charts that depend on this sandbox. */}}
+{{- define "tfy-sandbox-server.serviceFQDN" -}}
+{{- printf "%s.%s.svc.%s" (include "tfy-sandbox-server.fullname" .) (default .Release.Namespace (.Values.global).namespaceOverride) (include "tfy-sandbox-server.clusterDomain" .) -}}
+{{- end -}}
+
 {{- define "tfy-sandbox-server.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
