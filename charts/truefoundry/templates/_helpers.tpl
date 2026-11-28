@@ -208,13 +208,33 @@
 {{- end }}
 
 {{/*
+  TrueForge is installed for Build Agents (trueforge.enabled) or Ask TFY (tags.askTfy), matching the
+  dependency's condition and tags in Chart.yaml.
+  */}}
+{{- define "truefoundry.trueforgeInstalled" -}}
+{{- if or (index .Values "trueforge" "enabled") .Values.tags.askTfy -}}
+true
+{{- end -}}
+{{- end }}
+
+{{/*
+  Fail when tags.askTfy is on but trueforge.enabled is explicitly false: the condition beats the tag,
+  so Helm would skip TrueForge and leave Ask TFY without a server.
+  */}}
+{{- define "truefoundry.validateAskTfy" -}}
+{{- if and .Values.tags.askTfy (hasKey .Values.trueforge "enabled") (not .Values.trueforge.enabled) -}}
+{{- fail "tags.askTfy needs TrueForge, but trueforge.enabled: false stops it from being installed. Either unset trueforge.enabled OR set it to true OR set tags.askTfy to false" -}}
+{{- end -}}
+{{- end }}
+
+{{/*
   Fail when the TrueForge sandbox server would run on a ServiceAccount that does not exist: a name that
   differs from global.restrictedServiceAccount.name, or the restricted account while it is disabled.
   */}}
 {{- define "truefoundry.validateSandboxServiceAccount" -}}
 {{- $tf := .Values.trueforge | default dict -}}
 {{- $sa := dig "tfy-sandbox-server" "serviceAccount" dict $tf -}}
-{{- if and $tf.enabled (dig "truefoundry" "devSandboxServerEnabled" false $tf) (not $sa.create) $sa.name -}}
+{{- if and (eq (include "truefoundry.trueforgeInstalled" .) "true") (dig "truefoundry" "devSandboxServerEnabled" false $tf) (not $sa.create) $sa.name -}}
 {{- $restricted := .Values.global.restrictedServiceAccount | default dict -}}
 {{- $restrictedName := include "truefoundry.restrictedServiceAccountConfiguredName" . -}}
 {{- if and $restricted.enabled (ne $sa.name $restrictedName) -}}
@@ -888,4 +908,15 @@ Renders "true" or "".
 {{- else if (.Values.tags | default dict).llmGateway -}}
 true
 {{- end -}}
+{{- end -}}
+
+{{/*
+The port the tfy-llm-gateway subchart runs on: its `service.port`, which is the
+subchart's single port knob and drives its process, Service and probes alike.
+tfy-proxy dials that Service, so it derives the port from here instead of
+repeating the default.
+*/}}
+{{- define "truefoundry.llmGateway.port" -}}
+{{- $gw := index .Values "tfy-llm-gateway" | default dict -}}
+{{- ($gw.service | default dict).port | default 8787 -}}
 {{- end -}}
